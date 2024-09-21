@@ -121,11 +121,22 @@ function generateDailyReport() {
       }
   }
   // 显示报告给用户
-  vscode.window.showInformationMessage(report)
+  // vscode.window.showInformationMessage(report)
+  notifyReportGeneration()
   // 保存活跃报告
   saveDataToFile(activeHours, 'daily_active_reports.json')
   // 初始化原始数据
   initializeData()
+}
+
+function notifyReportGeneration() {
+  const filePath = path.join(global.globalStoragePath, 'daily_active_reports.json');
+  vscode.window.showInformationMessage('昨日工作报告已生成！点击查看。', '查看报告')
+      .then(selection => {
+          if (selection === '查看报告') {
+              vscode.env.openExternal(vscode.Uri.file(filePath));
+          }
+      });
 }
 
 // 初始化数据

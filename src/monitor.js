@@ -8,12 +8,13 @@ const fs = require('fs')
 const { saveDataToFile } = require('./reporter.js')
 
 let lastRecordedTime = Date.now()
-let activeMinutes = 0
 let activeHours = {} // 记录每小时的活跃时间
 let activityData = {}  // 存储每小时的活动数据
 let lastGitRepoPath = null // 上次记录的 Git 仓库路径
 
 function startMonitoring() {
+  // 最近 7 天的周报数据
+  scheduleWeeklyReport()
   // 监听文本编辑事件
   vscode.workspace.onDidChangeTextDocument((event) => {
     logActivity()
@@ -55,7 +56,7 @@ function startMonitoring() {
 // 记录项目切换
 function logProjectSwitch() {
   const now = new Date()
-  const currentHour = now.getHours()
+  const currentHour = now.getHours(); // 每次获取当前小时
 
   if (!activityData[currentHour]) {
       activityData[currentHour] = { operations: 0, switches: 0 }
@@ -65,14 +66,17 @@ function logProjectSwitch() {
   console.log(`项目切换记录：${currentHour}点，切换次数：${activityData[currentHour].switches}`)
 }
 
+// 记录活跃状态
 function logActivity() {
   const now = Date.now()
   // 计算自上次记录以来的秒数
   const elapsed = Math.floor((now - lastRecordedTime) / 1000)
   // 如果上次记录以来已经超过1分钟，则增加活跃分钟
   if (elapsed >= 60) {
-    activeMinutes += Math.floor(elapsed / 60) // 每超过60秒增加1分钟
-    lastRecordedTime = now // 更新最后记录时间
+    const minutesToAdd = Math.floor(elapsed / 60);
+    // 更新当前小时的活跃时间
+    activeHours[currentHour] = (activeHours[currentHour] || 0) + minutesToAdd;
+    lastRecordedTime = now;
   }
   // 记录活动数据
   if (!activityData[currentHour]) {
@@ -86,7 +90,7 @@ function logActivity() {
 function scheduleDailyReport() {
   const now = new Date()
   const nextRun = new Date()
-  nextRun.setHours(23, 59, 59, 59)
+  nextRun.setHours(0, 0, 0, 0) // 设置为明天的00:00
   if (now >= nextRun) {
     nextRun.setDate(nextRun.getDate() + 1)
   }
@@ -126,11 +130,10 @@ function generateDailyReport() {
 
 // 初始化数据
 function initializeData() {
-  let lastRecordedTime = Date.now()
-  let activeMinutes = 0
-  let activeHours = {}
-  let activityData = {}
-  let lastGitRepoPath = null
+  lastRecordedTime = Date.now()
+  activeHours = {}
+  activityData = {}
+  lastGitRepoPath = null
 }
 
 function analyzeEfficiency() {

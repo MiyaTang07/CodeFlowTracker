@@ -16,8 +16,8 @@
   "main": "./src/extension.js",
   "contributes": {
     "commands": [{
-      "command": "codeflowtracker.start",
-      "title": "codeflowtracker start"
+      "command": "codeflowtracker.showReport",
+      "title": "显示生产力报告"
     }],
     "configuration": {
       "properties": {

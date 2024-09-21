@@ -1,65 +1,21 @@
-# codeflowtracker README
+# 基于代码流的开发者生产力管理系统
 
-This is the README for your extension "codeflowtracker". After writing up a brief description, we recommend including the following sections.
+### 核心功能
+1. 工作时间追踪模块：实时监控开发者的工作时长，每次保存或提交时自动记录工作时间。  
+【保存】：onDidSaveTextDocument
 
-## Features
+2. 生产力数据收集模块：记录开发者的工作活动，包括保存次数、提交次数、代码行数变化等。  
+【提交】：通过 git 命令收集保存时的`提交次数`、`代码行数`等。  
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+3. 工作报告生成模块：按每日、每周、每月自动生成工作报告，内容包括工作时长、提交记录、修改代码量等。 
+- 生成JSON格式的报告，并通过VSCode插件内展示。
 
-For example if there is an image subfolder under your extension project workspace:
+4. 报告配置模块：用户可以自定义报告生成的频率、时间点（如周日或每天早上），并根据需求调整报告的内容和展示形式。
+- 允许开发者自定义报告生成时间，设置报告的时间段、内容等。
 
-\!\[feature X\]\(images/feature-x.png\)
+## 主要技术栈
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+1. 前端：VSCode插件前端界面，使用HTML、CSS 和 JS。  
+2. 后端：插件功能逻辑，用JavaScript或TypeScript实现（CommonJS规范）。  
+3. 存储方案：利用VSCode的globalState或者直接将数据保存到文件系统（JSON文件）中。  
 
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**

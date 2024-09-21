@@ -1,21 +1,33 @@
 {
   "name": "codeflowtracker",
   "displayName": "CodeFlowTracker",
-  "description": "",
+  "description": "Analyze coding habits and enhance developer productivity.",
   "version": "0.0.1",
+  "publisher": "tangjiao094",
   "engines": {
-    "vscode": "^1.93.0"
+    "vscode": "^1.93.1"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
-  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./src/extension.js",
   "contributes": {
     "commands": [{
-      "command": "codeflowtracker.helloWorld",
-      "title": "Hello World"
-    }]
+      "command": "codeflowtracker.start",
+      "title": "codeflowtracker start"
+    }],
+    "configuration": {
+      "properties": {
+        "productivityTracker.reportTime": {
+          "type": "string",
+          "default": "09:00",
+          "description": "The time to generate daily report."
+        }
+      }
+    }
   },
   "scripts": {
     "lint": "eslint .",

@@ -1,24 +1,48 @@
 /**
- * 收集信息：活跃时段，不活跃时段
- * 
+ * 收集信息：活跃时段 + 不活跃时段
+ * src/monitor.js
 */
 const vscode = require("vscode")
 const path = require('path')
 const fs = require('fs')
-const { saveDataToFile } = require('./reporter.js')
+const { saveDataToFile } = require('./reporter')
+const { scheduleWeeklyReport, generateWeeklyReport } = require('./weekly')
 
 let lastRecordedTime = Date.now()
 let activeHours = {} // 记录每小时的活跃时间
 let activityData = {}  // 存储每小时的活动数据
 let lastGitRepoPath = null // 上次记录的 Git 仓库路径
+const OPERATION_TIMES = vscode.workspace.getConfiguration('codeflowtracker').get('operations', 50)
+const SWITHES_TIMES = vscode.workspace.getConfiguration('codeflowtracker').get('switches', 5)
+const enableSmartReminder = vscode.workspace.getConfiguration('codeflowtracker').get('enableSmartReminder', true)
 
-function startMonitoring() {
+function startMonitoring(context) {
+  // 生成日报命令
+  const showDailyReportCommand = vscode.commands.registerCommand('codeflowtracker.showDailyReport', () => {
+    // 立即生成昨日工作报告
+    generateDailyReport()
+    // 立即生成昨日效率报告
+    generateEfficiencyReport()
+  })
+  context.subscriptions.push(showDailyReportCommand)
+  // 生成最近 7 天报告命令
+  const showWeeklyReportCommand = vscode.commands.registerCommand('codeflowtracker.showWeeklyReport', () => {
+    // 生成周报
+    generateWeeklyReport()
+  })
+  context.subscriptions.push(showWeeklyReportCommand)
   // 最近 7 天的周报数据
   scheduleWeeklyReport()
+  // 根据配置是否展示低效时段的智能检测和提醒
+  if (enableSmartReminder) {
+    startHourlyCheck()
+  }
+
   // 监听文本编辑事件
   vscode.workspace.onDidChangeTextDocument((event) => {
     logActivity()
   })
+
   // 监听文件切换事件
   vscode.window.onDidChangeActiveTextEditor((editor) => {
     if (editor) {
@@ -49,7 +73,7 @@ function startMonitoring() {
         lastGitRepoPath = currentGitRepoPath  // 更新最后的 Git 仓库路径
     }
   })
-  // 启动每日报告
+  // 启动每日报告定时任务
   scheduleDailyReport()
 }
 
@@ -76,7 +100,7 @@ function logActivity() {
     const minutesToAdd = Math.floor(elapsed / 60);
     // 更新当前小时的活跃时间
     activeHours[currentHour] = (activeHours[currentHour] || 0) + minutesToAdd;
-    lastRecordedTime = now;
+    lastRecordedTime = now
   }
   // 记录活动数据
   if (!activityData[currentHour]) {
@@ -90,7 +114,7 @@ function logActivity() {
 function scheduleDailyReport() {
   const now = new Date()
   const nextRun = new Date()
-  nextRun.setHours(0, 0, 0, 0) // 设置为明天的00:00
+  nextRun.setHours(24, 0, 0, 0) // 设置为明天的00:00
   if (now >= nextRun) {
     nextRun.setDate(nextRun.getDate() + 1)
   }
@@ -120,8 +144,7 @@ function generateDailyReport() {
           report += `${hour}:00 - ${hour + 1}:00 : 无活跃记录\n`
       }
   }
-  // 显示报告给用户
-  // vscode.window.showInformationMessage(report)
+  // 通知用户
   notifyReportGeneration()
   // 保存活跃报告
   saveDataToFile(activeHours, 'daily_active_reports.json')
@@ -136,7 +159,7 @@ function notifyReportGeneration() {
           if (selection === '查看报告') {
               vscode.env.openExternal(vscode.Uri.file(filePath));
           }
-      });
+      })
 }
 
 // 初始化数据
@@ -147,21 +170,49 @@ function initializeData() {
   lastGitRepoPath = null
 }
 
+// 在整点时分析前一个小时的低效情况
+function checkLowEfficiencyForPreviousHour() {
+  const currentHour = new Date().getHours()
+  const previousHour = currentHour - 1
+  // 检查前一个小时的数据是否存在
+  if (activityData[previousHour]) {
+    const { operations, switches } = activityData[previousHour];
+
+    // 判断标准：操作次数小于 OPERATION_TIMES 且切换次数大于 SWITHES_TIMES 则认为是低效
+    if (operations < OPERATION_TIMES && switches > SWITHES_TIMES) {
+        // 发送低效提醒
+        vscode.window.showInformationMessage(`在${previousHour}:00至${currentHour}:00，你的工作效率较低，建议休息或调整任务安排。`)
+    }
+  }
+}
+
+// 每小时开启智能低效时段检测
+function startHourlyCheck() {
+  const currentMinutes = new Date().getMinutes()
+  const millisecondsUntilNextHour = (60 - currentMinutes) * 60 * 1000
+
+  // 等到下一个整点再启动每小时的检查
+  setTimeout(() => {
+      checkLowEfficiencyForPreviousHour()
+      // 每小时执行一次
+      setInterval(checkLowEfficiencyForPreviousHour, 60 * 60 * 1000)
+  }, millisecondsUntilNextHour)
+
+}
+
 function analyzeEfficiency() {
   const efficientHours = []
-  const inefficientHours = []
-  
+  const inefficientHours = []  
   for (const hour in activityData) {
-      const { operations, switches } = activityData[hour]
-      
-      // 判断标准：操作次数大于50次并且切换次数小于5次则认为是高效
-      if (operations > 50 && switches < 5) {
+      const { operations, switches } = activityData[hour]      
+      // 判断标准：1h内默认操作次数大于50次并且切换次数小于5次则认为是高效
+      if (operations >= OPERATION_TIMES && switches <= SWITHES_TIMES) {
           efficientHours.push(hour)
       } else {
-          inefficientHours.push(hour)
+        // 低效时段
+        inefficientHours.push(hour)
       }
-  }
-  
+  }  
   return { efficientHours, inefficientHours }
 }
 

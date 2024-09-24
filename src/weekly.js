@@ -1,3 +1,7 @@
+/**
+ * 生成周报模块
+ * src/weekly.js
+*/
 const vscode = require("vscode")
 const path = require("path")
 const fs = require("fs")
@@ -111,5 +115,6 @@ function scheduleWeeklyReport() {
 }
 
 module.exports = {
-  scheduleWeeklyReport
+  scheduleWeeklyReport,
+  generateWeeklyReport
 }

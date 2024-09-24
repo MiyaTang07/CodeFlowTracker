@@ -7,6 +7,7 @@
   "engines": {
     "vscode": "^1.93.1"
   },
+  "icon": "./icon.jpg",
   "categories": [
     "Other"
   ],
@@ -15,16 +16,32 @@
   ],
   "main": "./src/extension.js",
   "contributes": {
-    "commands": [{
-      "command": "codeflowtracker.showReport",
-      "title": "显示生产力报告"
-    }],
+    "commands": [
+      {
+        "command": "codeflowtracker.showDailyReport",
+        "title": "显示每日生产力报告"
+      },
+      {
+        "command": "codeflowtracker.showWeeklyReport",
+        "title": "显示最近7日生产力报告"
+      }
+    ],
     "configuration": {
       "properties": {
-        "productivityTracker.reportTime": {
-          "type": "string",
-          "default": "09:00",
-          "description": "The time to generate daily report."
+        "codeflowtracker.operations": {
+          "type": "number",
+          "default": 50,
+          "description": "高效时段操作次数的判断最低值"
+        },
+        "codeflowtracker.switches": {
+          "type": "number",
+          "default": 5,
+          "description": "高效时段切换次数的判断最高值"
+        },
+        "codeflowtracker.enableSmartReminder": {
+          "type": "boolean",
+          "default": true,
+          "description": "智能提醒开关配置"
         }
       }
     }

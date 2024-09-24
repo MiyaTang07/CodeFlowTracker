@@ -1,5 +1,6 @@
 /**
- * 生成分析报告的模块
+ * 生成生成报告模块
+ * src/reporter.js
  */
 const fs = require("fs")
 const path = require("path")
